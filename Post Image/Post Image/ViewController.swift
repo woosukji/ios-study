@@ -10,12 +10,36 @@ import Foundation
 import Alamofire
 
 class ViewController: UIViewController {
+    
+    var serverURI: String?
+    var serverEndpoint: String?
 
     @IBOutlet weak var imageView: UIImageView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        loadSecrets()
+        if let safeServerURI = serverURI {
+            print("server uri loaded : \(safeServerURI)")
+        } else {
+            print("server uri not loaded")
+        }
+    }
+    
+    func loadSecrets() {
+        guard let url = Bundle.main.url(forResource: "secrets", withExtension: "plist") else {
+            return
+        }
+
+        guard let dictionary = NSDictionary(contentsOf: url) else {
+            return
+        }
+
+        // read
+        serverURI = dictionary["server-uri"] as? String
+        serverEndpoint = dictionary["image-post-endpoint"] as? String
+
     }
 
     @IBAction func handleChangeButton(_ sender: UIButton) {
@@ -33,7 +57,7 @@ class ViewController: UIViewController {
         if let imgData = imageView.image?.jpegData(compressionQuality: 1.0) {
 //            let imgSize = imageView.image?.size
 //            let imgScale = imageView.image?.scale
-            postImageData(filename: "test02.jpg", imgData: imgData)
+            postImageData(filename: "test.jpg", imgData: imgData)
         }
     }
     
@@ -43,7 +67,7 @@ class ViewController: UIViewController {
         mach_timebase_info(&info)
         let tick = mach_absolute_time()
         
-        let url = "[Server URI]"
+        let url = "\(serverURI!)/\(serverEndpoint!)"
     
         let parameters = [
             "filename": filename,
@@ -66,10 +90,10 @@ class ViewController: UIViewController {
             switch response.result {
                 case .success(let upload):
                     print("img successfully uploaded")
-//                    print(upload)
+                    print(upload)
                 case .failure(let err):
                     print("upload failure")
-//                    print(err)
+                    print(err)
             }
         }
     }
